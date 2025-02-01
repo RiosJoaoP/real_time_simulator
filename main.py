@@ -1,6 +1,9 @@
 import streamlit as st
 
 def main():
+    # Alterando o título da página
+    st.set_page_config(page_title="Job Scheduler - MATA82", page_icon="📅")
+
     # Título e descrição
     st.title("💻 Job Scheduler - MATA82")
     st.markdown(
@@ -15,7 +18,7 @@ def main():
     # Sidebar
     with st.sidebar:
         st.header("⚙️ Opções")
-        st.write("Configure seu job scheduler abaixo.")
+        st.write("Configure seu Job Scheduler abaixo.")
         st.divider()
 
 
