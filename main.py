@@ -33,6 +33,7 @@ def main():
             if task_name.strip():
                 st.session_state.jobs.append({"Task": task_name, "Period": period, "Cost": cost})
 
+        st.divider()
         st.subheader("Remover Job")
         if st.session_state.jobs:
             job_to_remove = st.selectbox("Escolha um job para remover", [job["Task"] for job in st.session_state.jobs])
@@ -41,12 +42,8 @@ def main():
 
         if st.button("Limpar Simulação"):
             st.session_state.jobs = []
-            # draw_empty_chart(chart_placeholder)
 
-    st.subheader("📋 Tabela de Jobs")
-    st.table(st.session_state.jobs)
-
-    # Lista de jobs
+        # Lista de jobs
     jobs = [
         {"Task": "Job 1", "Start": 0, "Finish": 3},
         {"Task": "Job 2", "Start": 3, "Finish": 6},
@@ -62,55 +59,67 @@ def main():
         if job["Task"] not in task_colors:
             task_colors[job["Task"]] = colors[len(task_colors) % len(colors)]
 
+    # Espaço reservado para o gráfico
     chart_placeholder = st.empty()
-    job_traces = []
-    current_time = 0
-    max_time = max(job["Finish"] for job in jobs)
 
-    # Escalonamento de jobs - Simulação
-    while current_time <= max_time:
-        fig = go.Figure()
+    # Função para atualizar o gráfico
+    def update_chart():
 
-        for trace in job_traces:
-            fig.add_trace(trace)
+        job_traces = []
+        current_time = 0
+        max_time = max(job["Finish"] for job in jobs)
 
-        active_job = next((job for job in jobs if job["Start"] <= current_time < job["Finish"]), None)
-        if active_job:
-            task_name = active_job["Task"]
-            start_time = active_job["Start"]
+        while current_time <= max_time:
+            fig = go.Figure()
 
-            new_trace = go.Bar(
-                x=[current_time - start_time],
-                y=[task_name],
-                base=start_time,
-                orientation='h',
-                marker=dict(color=task_colors[task_name])
+            for trace in job_traces:
+                fig.add_trace(trace)
+
+            active_job = next((job for job in jobs if job["Start"] <= current_time < job["Finish"]), None)
+            if active_job:
+                task_name = active_job["Task"]
+                start_time = active_job["Start"]
+
+                new_trace = go.Bar(
+                    x=[current_time - start_time],
+                    y=[task_name],
+                    base=start_time,
+                    orientation='h',
+                    marker=dict(color=task_colors[task_name])
+                )
+                fig.add_trace(new_trace)
+                job_traces.append(new_trace)
+
+            fig.add_shape(
+                type="line",
+                x0=current_time,
+                x1=current_time,
+                y0=-0.5,
+                y1=len(set(job["Task"] for job in jobs)) - 0.5,
+                line=dict(color="white", width=2, dash="dash"),
             )
-            fig.add_trace(new_trace)
-            job_traces.append(new_trace)
 
-        fig.add_shape(
-            type="line",
-            x0=current_time,
-            x1=current_time,
-            y0=-0.5,
-            y1=len(set(job["Task"] for job in jobs)) - 0.5,
-            line=dict(color="white", width=2, dash="dash"),
-        )
+            fig.update_layout(
+                title="Escalonamento de Jobs",
+                xaxis_title="Tempo",
+                yaxis_title="Jobs",
+                xaxis=dict(range=[0, max_time]),
+                yaxis=dict(categoryorder="category descending"),
+                barmode="overlay",
+                showlegend=False
+            )
 
-        fig.update_layout(
-            title="Escalonamento de Jobs",
-            xaxis_title="Tempo",
-            yaxis_title="Jobs",
-            xaxis=dict(range=[0, max_time]),
-            yaxis=dict(categoryorder="category descending"),
-            barmode="overlay",
-            showlegend=False
-        )
+            chart_placeholder.plotly_chart(fig, use_container_width=True)
+            time.sleep(0.1)
+            current_time += 0.1
 
-        chart_placeholder.plotly_chart(fig, use_container_width=True)
-        time.sleep(0.1)
-        current_time += 0.1
+    # Tabela de Jobs
+    st.subheader("📋 Tabela de Jobs")
+    st.table(st.session_state.jobs)
+
+    # Botão para iniciar a animação
+    if st.button("Iniciar Animação"):
+        update_chart()
 
 if __name__ == "__main__":
     main()
