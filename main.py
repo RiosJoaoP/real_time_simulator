@@ -4,7 +4,10 @@ import time
 import random
 
 def main():
-    st.set_page_config(page_title="Job Scheduler - MATA82", page_icon="📅")
+    st.set_page_config(page_title="Job Scheduler - MATA82", page_icon="💻")
+
+    if "jobs" not in st.session_state:
+        st.session_state.jobs = []
 
     st.title("💻 Job Scheduler - MATA82")
     st.markdown(
@@ -19,8 +22,29 @@ def main():
     # Sidebar
     with st.sidebar:
         st.header("⚙️ Opções")
-        st.write("Configure seu Job Scheduler abaixo.")
+        algorithm = st.selectbox("Escolha o Algoritmo de Escalonamento", ["Rate Monotonic", "Earliest Deadline First"])
         st.divider()
+
+        st.subheader("Adicionar Novo Job")
+        task_name = st.text_input("Nome da Tarefa")
+        period = st.number_input("Período", min_value=1, value=5)
+        cost = st.number_input("Custo", min_value=1, value=2)
+        if st.button("Adicionar Job"):
+            if task_name.strip():
+                st.session_state.jobs.append({"Task": task_name, "Period": period, "Cost": cost})
+
+        st.subheader("Remover Job")
+        if st.session_state.jobs:
+            job_to_remove = st.selectbox("Escolha um job para remover", [job["Task"] for job in st.session_state.jobs])
+            if st.button("Remover Job"):
+                st.session_state.jobs = [job for job in st.session_state.jobs if job["Task"] != job_to_remove]
+
+        if st.button("Limpar Simulação"):
+            st.session_state.jobs = []
+            # draw_empty_chart(chart_placeholder)
+
+    st.subheader("📋 Tabela de Jobs")
+    st.table(st.session_state.jobs)
 
     # Lista de jobs
     jobs = [
