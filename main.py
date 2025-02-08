@@ -50,6 +50,34 @@ def main():
         if st.button("Limpar Simulação"):
             st.session_state.jobs = []
 
+        st.divider()
+        st.subheader("👨‍💻 Autores")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(
+                """
+                <a href="http://github.com/carloscerq" target="_blank">
+                    <img src="http://github.com/carloscerq.png" alt="Carlos Eduardo" style="width: 150px; height: 150px; border-radius: 50%;">
+                </a>
+                <p style="text-align: center; margin-top: 10%;">Carlos Eduardo</p>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                """
+                <a href="https://github.com/RiosJoaoP" target="_blank">
+                    <img src="https://github.com/RiosJoaoP.png" alt="João Paulo Rios" style="width: 150px; height: 150px; border-radius: 50%;">
+                </a>
+                <p style="text-align: center; margin-top: 10%;">João Paulo Rios</p>
+                """,
+                unsafe_allow_html=True,
+    )
+
+
     # Espaço reservado para o gráfico e alertas
     chart_placeholder = st.empty()
     alert_placeholder = st.empty()
