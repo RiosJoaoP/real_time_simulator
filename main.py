@@ -29,12 +29,11 @@ def main():
         st.divider()
 
         st.subheader("Adicionar Novo Job")
-        task_name = st.text_input("Nome da Tarefa")
         period = st.number_input("Período", min_value=1, value=5)
         cost = st.number_input("Custo", min_value=1, value=2)
         if st.button("Adicionar Job"):
-            if task_name.strip():
-                st.session_state.jobs.append({"Task": task_name, "Period": period, "Cost": cost})
+            new_task_name = f"T{len(st.session_state.jobs) + 1}"
+            st.session_state.jobs.append({"Task": new_task_name, "Period": period, "Cost": cost})
 
         st.divider()
         st.subheader("Remover Job")
@@ -42,6 +41,9 @@ def main():
             job_to_remove = st.selectbox("Escolha um job para remover", [job["Task"] for job in st.session_state.jobs])
             if st.button("Remover Job"):
                 st.session_state.jobs = [job for job in st.session_state.jobs if job["Task"] != job_to_remove]
+                # Renomear tarefas para manter sequência
+                for i, job in enumerate(st.session_state.jobs):
+                    job["Task"] = f"T{i + 1}"
 
         if st.button("Limpar Simulação"):
             st.session_state.jobs = []
