@@ -146,14 +146,17 @@ def main():
         csv = df.to_csv(index=False).encode('utf-8')
         download_placeholder.download_button("📥 Baixar CSV", data=csv, file_name="schedule.csv", mime="text/csv")
 
-    # Tabela de Jobs
-    st.subheader("🗉 Tabela de Jobs")
-    st.dataframe(st.session_state.jobs, hide_index=True)
+    # Tabela de Jobs e Botão de Iniciar Animação
+    if st.session_state.jobs:
+        st.subheader("🗉 Tabela de Jobs")
+        st.dataframe(st.session_state.jobs, hide_index=True)
 
-    # Botão para iniciar a animação
-    if st.button("Iniciar Animação"):
-        alert_placeholder.empty()
-        update_chart()
+        # Botão para iniciar a animação
+        if st.button("Iniciar Animação"):
+            alert_placeholder.empty()
+            update_chart()
+    else:
+        st.info("Adicione pelo menos um job para visualizar a tabela e iniciar a simulação.")
 
 if __name__ == "__main__":
     main()
