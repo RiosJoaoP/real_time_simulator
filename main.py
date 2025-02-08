@@ -44,12 +44,15 @@ def main():
             st.session_state.jobs = []
 
         # Lista de jobs
-    jobs = [
-        {"Task": "Job 1", "Start": 0, "Finish": 3},
-        {"Task": "Job 2", "Start": 3, "Finish": 6},
-        {"Task": "Job 3", "Start": 6, "Finish": 9},
-        {"Task": "Job 1", "Start": 12, "Finish": 15},
-    ]
+    jobs = [{'Task': 'T1', 'Start': 4, 'Finish': 5.0},
+            {'Task': 'T1', 'Start': 7, 'Finish': 9.0},
+            {'Task': 'T2', 'Start': 0, 'Finish': 2.0},
+            {'Task': 'T2', 'Start': 5, 'Finish': 7.0},
+            {'Task': 'T2', 'Start': 10, 'Finish': 12.0},
+            {'Task': 'T2', 'Start': 15, 'Finish': 17.0},
+            {'Task': 'T3', 'Start': 2, 'Finish': 4.0},
+            {'Task': 'T3', 'Start': 12, 'Finish': 14.0}
+            ]
 
     # Atribuir cores únicas para cada job
     task_colors = {}
