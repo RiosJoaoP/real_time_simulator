@@ -2,6 +2,8 @@ import streamlit as st
 import plotly.graph_objects as go
 import time
 import random
+import pandas as pd
+from io import BytesIO
 
 from scheduling import schedule, Job
 from utils import least_common_multiple
@@ -48,9 +50,12 @@ def main():
         if st.button("Limpar Simulação"):
             st.session_state.jobs = []
 
-    # Espaço reservado para o gráfico
+    # Espaço reservado para o gráfico e alertas
     chart_placeholder = st.empty()
     alert_placeholder = st.empty()
+    table_header_placeholder = st.empty()
+    table_placeholder = st.empty()
+    download_placeholder = st.empty()
 
     # Função para atualizar o gráfico
     def update_chart():
@@ -131,10 +136,19 @@ def main():
 
             if deadline_missed_time is not None and current_time >= deadline_missed_time:
                 break
+        
+        # Exibir tabela com o schedule ordenada por Start Time
+        df = pd.DataFrame(scheduled_jobs).sort_values(by="Start")
+        table_placeholder.dataframe(df, hide_index=True)
+        table_header_placeholder.subheader("📊 Tabela de Escalonamento")
+
+        # Adicionar opção para download com título antes do botão
+        csv = df.to_csv(index=False).encode('utf-8')
+        download_placeholder.download_button("📥 Baixar CSV", data=csv, file_name="schedule.csv", mime="text/csv")
 
     # Tabela de Jobs
     st.subheader("🗉 Tabela de Jobs")
-    st.table(st.session_state.jobs)
+    st.dataframe(st.session_state.jobs, hide_index=True)
 
     # Botão para iniciar a animação
     if st.button("Iniciar Animação"):
