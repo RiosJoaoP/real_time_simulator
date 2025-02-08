@@ -3,6 +3,9 @@ import plotly.graph_objects as go
 import time
 import random
 
+from scheduling import schedule, Job
+from utils import least_common_multiple
+
 def main():
     st.set_page_config(page_title="Job Scheduler - MATA82", page_icon="💻")
 
@@ -43,46 +46,44 @@ def main():
         if st.button("Limpar Simulação"):
             st.session_state.jobs = []
 
-        # Lista de jobs
-    jobs = [{'Task': 'T1', 'Start': 4, 'Finish': 5.0},
-            {'Task': 'T1', 'Start': 7, 'Finish': 9.0},
-            {'Task': 'T2', 'Start': 0, 'Finish': 2.0},
-            {'Task': 'T2', 'Start': 5, 'Finish': 7.0},
-            {'Task': 'T2', 'Start': 10, 'Finish': 12.0},
-            {'Task': 'T2', 'Start': 15, 'Finish': 17.0},
-            {'Task': 'T3', 'Start': 2, 'Finish': 4.0},
-            {'Task': 'T3', 'Start': 12, 'Finish': 14.0}
-            ]
-
-    # Atribuir cores únicas para cada job
-    task_colors = {}
-    colors = ["blue", "red", "green", "purple", "orange", "cyan", "pink"]
-    random.shuffle(colors)
-    for job in jobs:
-        if job["Task"] not in task_colors:
-            task_colors[job["Task"]] = colors[len(task_colors) % len(colors)]
-
     # Espaço reservado para o gráfico
     chart_placeholder = st.empty()
+    alert_placeholder = st.empty()
 
     # Função para atualizar o gráfico
     def update_chart():
+        jobs = [Job(job["Cost"], job["Period"], job["Task"], i+1) for i, job in enumerate(st.session_state.jobs)]
+        
+        # Executar o agendamento
+        cycles = 2 * least_common_multiple([job.period for job in jobs])
+        scheduled_jobs, deadline_missed_time = schedule(jobs, cycles, method="RM" if algorithm == "Rate Monotonic" else "EDF")
+
+        if deadline_missed_time is not None:
+            alert_placeholder.error(f"⚠️ Deadline perdida no tempo {deadline_missed_time}")
+
+        task_colors = {}
+        colors = ["blue", "red", "green", "purple", "orange", "cyan", "pink"]
+        random.shuffle(colors)
+        for job in scheduled_jobs:
+            if job["Task"] not in task_colors:
+                task_colors[job["Task"]] = colors[len(task_colors) % len(colors)]
 
         job_traces = []
         current_time = 0
-        max_time = max(job["Finish"] for job in jobs)
+        max_time = max(job["Finish"] for job in scheduled_jobs)
+        mmc = least_common_multiple([job.period for job in jobs])
 
         while current_time <= max_time:
             fig = go.Figure()
-
+            
             for trace in job_traces:
                 fig.add_trace(trace)
 
-            active_job = next((job for job in jobs if job["Start"] <= current_time < job["Finish"]), None)
+            active_job = next((job for job in scheduled_jobs if job["Start"] <= current_time < job["Finish"]), None)
             if active_job:
                 task_name = active_job["Task"]
                 start_time = active_job["Start"]
-
+                
                 new_trace = go.Bar(
                     x=[current_time - start_time],
                     y=[task_name],
@@ -98,8 +99,18 @@ def main():
                 x0=current_time,
                 x1=current_time,
                 y0=-0.5,
-                y1=len(set(job["Task"] for job in jobs)) - 0.5,
+                y1=len(set(job["Task"] for job in scheduled_jobs)) - 0.5,
                 line=dict(color="white", width=2, dash="dash"),
+            )
+            
+            fig.add_shape(
+                type="line",
+                x0=mmc,
+                x1=mmc,
+                y0=-0.5,
+                y1=len(set(job["Task"] for job in scheduled_jobs)) - 0.5,
+                line=dict(color="yellow", width=2, dash="dot"),
+                name="MMC"
             )
 
             fig.update_layout(
@@ -116,12 +127,16 @@ def main():
             time.sleep(0.1)
             current_time += 0.1
 
+            if deadline_missed_time is not None and current_time >= deadline_missed_time:
+                break
+
     # Tabela de Jobs
-    st.subheader("📋 Tabela de Jobs")
+    st.subheader("🗉 Tabela de Jobs")
     st.table(st.session_state.jobs)
 
     # Botão para iniciar a animação
     if st.button("Iniciar Animação"):
+        alert_placeholder.empty()
         update_chart()
 
 if __name__ == "__main__":
