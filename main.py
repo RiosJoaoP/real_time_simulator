@@ -53,29 +53,60 @@ def main():
         st.divider()
         st.subheader("👨‍💻 Autores")
 
-        col1, col2 = st.columns(2)
+        # Usando CSS para ajustar o layout de forma responsiva
+        st.markdown(
+            """
+            <style>
+            .author-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            .author-item {
+                text-align: center;
+                flex: 1 1 150px; /* Flexível, mas com tamanho mínimo de 150px */
+            }
+            .author-item img {
+                width: 100%;
+                max-width: 150px;
+                height: auto;
+                border-radius: 50%;
+            }
+            .author-item p {
+                margin-top: 10px;
+                font-size: 16px;
+            }
+            @media (max-width: 600px) {
+                .author-item {
+                    flex: 1 1 100%; /* Em telas pequenas, ocupa toda a largura */
+                }
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        with col1:
-            st.markdown(
-                """
-                <a href="http://github.com/carloscerq" target="_blank">
-                    <img src="http://github.com/carloscerq.png" alt="Carlos Eduardo" style="width: 150px; height: 150px; border-radius: 50%;">
-                </a>
-                <p style="text-align: center; margin-top: 10%;">Carlos Eduardo</p>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with col2:
-            st.markdown(
-                """
-                <a href="https://github.com/RiosJoaoP" target="_blank">
-                    <img src="https://github.com/RiosJoaoP.png" alt="João Paulo Rios" style="width: 150px; height: 150px; border-radius: 50%;">
-                </a>
-                <p style="text-align: center; margin-top: 10%;">João Paulo Rios</p>
-                """,
-                unsafe_allow_html=True,
-            )
+        # Container para os autores
+        st.markdown(
+            """
+            <div class="author-container">
+                <div class="author-item">
+                    <a href="http://github.com/carloscerq" target="_blank">
+                        <img src="http://github.com/carloscerq.png" alt="Carlos Eduardo">
+                    </a>
+                    <p>Carlos Eduardo</p>
+                </div>
+                <div class="author-item">
+                    <a href="https://github.com/RiosJoaoP" target="_blank">
+                        <img src="https://github.com/RiosJoaoP.png" alt="João Paulo Rios">
+                    </a>
+                    <p>João Paulo Rios</p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # Espaço reservado para o gráfico e alertas
     chart_placeholder = st.empty()
