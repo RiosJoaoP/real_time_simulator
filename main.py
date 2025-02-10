@@ -75,8 +75,7 @@ def main():
                 <p style="text-align: center; margin-top: 10%;">João Paulo Rios</p>
                 """,
                 unsafe_allow_html=True,
-    )
-
+            )
 
     # Espaço reservado para o gráfico e alertas
     chart_placeholder = st.empty()
@@ -85,7 +84,73 @@ def main():
     table_placeholder = st.empty()
     download_placeholder = st.empty()
 
-    # Função para atualizar o gráfico
+    # Função para atualizar o gráfico de forma estática
+    def update_chart_static():
+        jobs = [Job(job["Cost"], job["Period"], job["Task"], i+1) for i, job in enumerate(st.session_state.jobs)]
+        
+        # Executar o agendamento
+        cycles = 2 * least_common_multiple([job.period for job in jobs])
+        scheduled_jobs, deadline_missed_time = schedule(jobs, cycles, method="RM" if algorithm == "Rate Monotonic" else "EDF")
+
+        if deadline_missed_time is not None:
+            alert_placeholder.error(f"⚠️ Deadline perdida no tempo {deadline_missed_time}")
+
+        task_colors = {}
+        colors = ["blue", "red", "green", "purple", "orange", "cyan", "pink"]
+        random.shuffle(colors)
+        for job in scheduled_jobs:
+            if job["Task"] not in task_colors:
+                task_colors[job["Task"]] = colors[len(task_colors) % len(colors)]
+
+        fig = go.Figure()
+        for job in scheduled_jobs:
+            task_name = job["Task"]
+            start_time = job["Start"]
+            finish_time = job["Finish"]
+            
+            fig.add_trace(go.Bar(
+                x=[finish_time - start_time],
+                y=[task_name],
+                base=start_time,
+                orientation='h',
+                marker=dict(color=task_colors[task_name])
+            ))
+
+        max_time = max(job["Finish"] for job in scheduled_jobs)
+        mmc = least_common_multiple([job.period for job in jobs])
+
+        fig.add_shape(
+            type="line",
+            x0=mmc,
+            x1=mmc,
+            y0=-0.5,
+            y1=len(set(job["Task"] for job in scheduled_jobs)) - 0.5,
+            line=dict(color="yellow", width=2, dash="dot"),
+            name="MMC"
+        )
+
+        fig.update_layout(
+            title="Escalonamento de Jobs",
+            xaxis_title="Tempo",
+            yaxis_title="Jobs",
+            xaxis=dict(range=[0, max_time]),
+            yaxis=dict(categoryorder="category descending"),
+            barmode="overlay",
+            showlegend=False
+        )
+
+        chart_placeholder.plotly_chart(fig, use_container_width=True)
+        
+        # Exibir tabela com o schedule ordenada por Start Time
+        df = pd.DataFrame(scheduled_jobs).sort_values(by="Start")
+        table_placeholder.dataframe(df, hide_index=True)
+        table_header_placeholder.subheader("📊 Tabela de Escalonamento")
+
+        # Adicionar opção para download com título antes do botão
+        csv = df.to_csv(index=False).encode('utf-8')
+        download_placeholder.download_button("📥 Baixar CSV", data=csv, file_name="schedule.csv", mime="text/csv")
+
+    # Função para atualizar o gráfico com animação
     def update_chart():
         jobs = [Job(job["Cost"], job["Period"], job["Task"], i+1) for i, job in enumerate(st.session_state.jobs)]
         
@@ -179,10 +244,16 @@ def main():
         st.subheader("🗉 Tabela de Jobs")
         st.dataframe(st.session_state.jobs, hide_index=True)
 
-        # Botão para iniciar a animação
-        if st.button("Iniciar Animação"):
-            alert_placeholder.empty()
-            update_chart()
+        # Botão para iniciar a animação ou exibir o resultado estático
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Iniciar Animação"):
+                alert_placeholder.empty()
+                update_chart()
+        with col2:
+            if st.button("Exibir Resultado Completo"):
+                alert_placeholder.empty()
+                update_chart_static()
     else:
         st.info("Adicione pelo menos um job para visualizar a tabela e iniciar a simulação.")
 
